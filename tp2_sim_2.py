@@ -6,12 +6,12 @@ import matplotlib.animation as animation
 #----------------------------------------------------------------------------------
 time_1 = datetime.now()
 
-G = 6.6742e-11
-MS = 5.6834e26
-M_Mimas = 3.7493e19
-M_Thetys = 6.17449e20
-M_Titan = 1.3452e23
-dt = 86400.0
+GMS = 37931206.2
+GM_Mimas = 2.503489 
+GM_Thetys = 41.21
+GM_Titan = 8978.14
+
+dt = 3600.0
 
 nt = 20
 S = np.zeros((nt,9))
@@ -34,8 +34,8 @@ Titan_vel = np.zeros(3)
 Titan_acc = np.zeros(3)
 Titan_acc_new = np.zeros(3)
 
-Mimas_pos[:] = [-5.810375154371507E+07, 1.457217395207454E+08, -7.653232466058011E+07]
-Mimas_vel[:] = [-1.412505918711402E+04, 1.326791568773807E+03, 6.383898069507170E+02]
+Mimas_pos[:] = [-5.810375154371507E+04, 1.457217395207454E+05, -7.653232466058011E+04]
+Mimas_vel[:] = [-1.412505918711402E+01, 1.326791568773807E+00, 6.383898069507170E-01]
 Mimas_acc[:] = [0,0,0]
 Mimas_acc_new[:] = [0,0,0]
 
@@ -50,13 +50,19 @@ Titan_acc[:] = [0,0,0]
 Titan_acc_new[:] = [0,0,0]
 
 Mimas_data = np.zeros((nt,3))
+Mimas_data[0,:] = Mimas_pos
+time = np.arange(0,nt,1)
 
 for t in range(1,nt):
-    Mimas_acc_new += G*(MS*M_Mimas)/(np.linalg.norm(Mimas_pos)**2)*Mimas_pos
+    Mimas_acc_new = -(GMS)/(np.linalg.norm(Mimas_pos)**3)*Mimas_pos
     Mimas_vel += (Mimas_acc + Mimas_acc_new)*0.5*dt
-    Mimas_acc += Mimas_acc_new
+    Mimas_acc = Mimas_acc_new
     Mimas_pos += Mimas_vel*dt + Mimas_acc*0.5*dt**2
     Mimas_data[t] = Mimas_pos
+
+plt.figure()
+plt.plot(time,Mimas_data[:,0])
+plt.show()
 
 fig = plt.figure(figsize=(7,7))
 ax = fig.add_subplot(111,projection='3d')
