@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as p3
 from datetime import datetime
 import matplotlib.animation as animation
+from copy import deepcopy as copy
+
 #----------------------------------------------------------------------------------
 time_1 = datetime.now()
 
@@ -37,9 +39,9 @@ class Body():
         acc = np.array([0,0,0])
         for other_body in Body.all:
             if self.name != other_body.name:
-                d = other_body.pos - self.pos
-                r = np.sqrt(np.sum(d**2))
-                acc = acc + d * other_body.gm / (r**3)
+                r = other_body.pos - self.pos
+                d = np.sqrt(np.sum(r**2))
+                acc = acc + r * other_body.gm / (d**3)
         return acc
 
 #----------------------------------------------------------------------------------------------------
@@ -73,44 +75,105 @@ saturn = Body(
     acc  = np.array([0,0,0]),
     gm   = 37931206.2)
 
-#----------------------------------------------------------------------------------------------------
-# Define the function to calculate the acceleration
 
 for body in [mimas, thetys, titan]:
     body.acc = body.compute_acceleration(saturn)
 
+#----------------------------------------------------------------------------------------------------
+# Leap frog integrator
+
+# for t in range(0,T):
+    
+#     for body in [mimas, thetys]:
+
+#         body.pos = body.pos + body.vel * DT + body.acc/2 * DT**2
+#         body.vel =            body.vel      + body.acc/2 * DT
+#         body.acc = body.compute_acceleration(saturn)
+#         if body is titan:
+#             body.acc *= 5.5
+#         body.vel =            body.vel      + body.acc/2 * DT
+
+#         body.pos_evol[t] = body.pos
+
+#----------------------------------------------------------------------------------------------------
+# Runge kutta integrator
+
+# Acceleration function : f(t,y) -> (v,a)     with y = (p,v)
+def f(t, y) -> np.array:
+    pos = y[:3]
+    vel = y[3:]
+
+    other_body=saturn
+
+    acc = np.array([0,0,0])
+    for other_body in Body.all:
+        if body.name != other_body.name:
+            r = other_body.pos - pos
+            d = np.sqrt(np.sum(r**2))
+            acc = acc + r * other_body.gm / (d**3)
+
+    return np.concatenate((vel, acc))
+
+# Runge kutta 4th order : rk4(t,dt,y,evaluate) -> y     with y = (p,v)
+def rk4(t,dt,y,evaluate) -> np.array:
+
+    k1 = dt * evaluate(t, y) 
+    k2 = dt * evaluate(t + 0.5*dt, y + 0.5*k1)
+    k3 = dt * evaluate(t + 0.5*dt, y + 0.5*k2)
+    k4 = dt * evaluate(t + dt, y + k3)
+    
+    y_new = y + (1/6.)*(k1+ 2*k2 + 2*k3 + k4)
+
+    return y_new
+
+
 for t in range(0,T):
     
-    for body in [mimas, thetys, titan]:
-        # print("\n----------\n")
-        # print("At t:")
-        # print(f"   x  = {p[0]:.3e}, y  = {p[1]:.3e}, z  = {p[2]:.3e}")
-        # print(f"   vx = {v[0]:.3e}, vy = {v[1]:.3e}, vz = {v[2]:.3e}")
-        # print(f"   ax = {a[0]:.3e}, ay = {a[1]:.3e}, az = {a[2]:.3e}")
+    for body in [mimas, thetys]:
 
-        body.pos = body.pos + body.vel * DT + body.acc/2 * DT**2
-        body.vel =            body.vel      + body.acc/2 * DT
-        body.acc = body.compute_acceleration(saturn)
-        body.vel =            body.vel      + body.acc/2 * DT
+        y = np.concatenate((body.pos, body.vel))
+        y = rk4(t, DT, y, f)
+
+        body.pos = y[:3]
+        body.vel = y[3:]
 
         body.pos_evol[t] = body.pos
 
+
+#----------------------------------------------------------------------------------------------------
+# Plot the results
+
 fig = plt.figure(figsize=(7,7))
-# ax = plt.subplot(121, projection='3d')
-# plt.title('Orbits of the bodies')
-# plt.grid()
-# plt.scatter(0,0,0, marker='o', color='r')
-# ax.scatter(mimas.pos_evol[0,:,0], mimas.pos_evol[0,:,2], c = acc_xz[0,:], cmap = "gnuplot")
-# plt.scatter(mimas.pos_evol[:,0], mimas.pos_evol[:,1], mimas.pos_evol[:,2], marker='o', color='b')
-# plt.scatter(thetys.pos_evol[:,0], thetys.pos_evol[:,1], thetys.pos_evol[:,2], marker='o', color='g')
-# plt.scatter(titan.pos_evol[:,0], titan.pos_evol[:,1], titan.pos_evol[:,2], marker='o', color='y')
 
-plt.subplot(111)
+plt.subplot(231)
 plt.title('Evolution of the x coordinate')
-for body in [mimas, thetys, titan]:
+for body in Body.all:
     plt.plot(np.arange(T)*DT/86400.0, body.pos_evol[:,0], label=body.name)
-
+plt.xlabel('Time [days]')
+plt.ylabel('x [km]')
 plt.legend()
+
+plt.subplot(232)
+plt.title('Evolution of the y coordinate')
+for body in Body.all:
+    plt.plot(np.arange(T)*DT/86400.0, body.pos_evol[:,1], label=body.name)
+plt.xlabel('Time [days]')
+plt.ylabel('y [km]')
+plt.legend()
+
+plt.subplot(233)
+plt.title('Evolution of the z coordinate')
+for body in Body.all:
+    plt.plot(np.arange(T)*DT/86400.0, body.pos_evol[:,2], label=body.name)
+plt.xlabel('Time [days]')
+plt.ylabel('z [km]')
+plt.legend()
+
+ax = plt.subplot(235, projection='3d')
+ax.set_title('Orbits of the bodies')
+for body in Body.all:
+    ax.plot(body.pos_evol[:,0], body.pos_evol[:,1], body.pos_evol[:,2], marker='o', label=body.name)
+
 plt.show()
 
 time_2 = datetime.now()
