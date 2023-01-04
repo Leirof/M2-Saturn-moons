@@ -77,7 +77,9 @@ def cartesian_to_orbital(pos: list[float] | np.ndarray[float], vit: list[float] 
     gy = pos[2] * vit[0] - pos[0] * vit[2]
     gz = pos[0] * vit[1] - pos[1] * vit[0]
     gg = np.sqrt(gx*gx + gy*gy + gz*gz)
+    print(gz, gg)
     cis2 = np.sqrt(0.5 * (1 + gz / gg))
+    print(gg, cis2)
     q = -gy / (2 * gg * cis2)
     p = gx / (2 * gg * cis2)
 
@@ -85,14 +87,20 @@ def cartesian_to_orbital(pos: list[float] | np.ndarray[float], vit: list[float] 
     tq = 1 - 2 * q*q
     dg = 2 * p * q
 
+    print("tp={}\ttq={}\tdg={}\tp={}\tq={}".format(tp, tq, dg, p, q))
+    print("vit=",vit)
+
     x1 = tp * pos[0] + dg * pos[1] - 2 * p * cis2 * pos[2]
     y1 = dg * pos[0] + tq * pos[1] + 2 * q * cis2 * pos[2]
     vx1 = tp * vit[0] + dg * vit[1] - 2 * p * cis2 * vit[2]
     vy1 = dg * vit[0] + tq * vit[1] + 2 * q * cis2 * vit[2]
 
-    k = gg * vx1 / GM - x1 / rayon
-    h = gg * vy1 / GM - y1 / rayon
+    print(gg, vx1, vy1, x1, y1, GM, rayon)
 
+    k = gg * vy1 / GM - x1 / rayon
+    h = -gg * vx1 / GM - y1 / rayon
+
+    print(k,h)
     psi = 1/(1+np.sqrt(1-k*k-h*h))
 
     ach = 1 - psi * h*h
@@ -113,7 +121,11 @@ def cartesian_to_orbital(pos: list[float] | np.ndarray[float], vit: list[float] 
     return np.array([a, k, h, q, p, l])
 
 if __name__ == "__main__":
-    vit, pos = orbital_to_cartesian([1, 0, 0, 0, 0, 0], 1)
-    print(pos, vit)
-    ell = cartesian_to_orbital(pos,vit, 1)
-    print(ell)
+    # vit, pos = orbital_to_cartesian([1, 0, 0, 0, 1, 0], 1)
+    pos = [1, 2, 3]
+    vit = [3, 1, 2]
+    GM = 1
+    ell = cartesian_to_orbital(pos,vit, GM)
+    for i in ell:
+        print(i, end="\t")
+    print()

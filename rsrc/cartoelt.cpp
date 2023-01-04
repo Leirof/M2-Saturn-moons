@@ -1,3 +1,5 @@
+#include <math.h>
+#include <stdio.h>
 using namespace std;
 
 void cartoelt(double pos[3], double vit[3], double GM, double ell[6])
@@ -13,18 +15,28 @@ void cartoelt(double pos[3], double vit[3], double GM, double ell[6])
   gy=pos[2]*vit[0]-pos[0]*vit[2];
   gz=pos[0]*vit[1]-pos[1]*vit[0];
   gg=sqrt(gx*gx+gy*gy+gz*gz);
+  printf("%f\t%f\n", gz, gg);
   cis2=sqrt(0.5*(1.+gz/gg));
+  printf("%f\t%f\n", gg, cis2);
   q=-gy/(2.*gg*cis2);
   p=gx/(2.*gg*cis2);
   tp=1.-2.*p*p;
   tq=1.-2.*q*q;
   dg=2.*p*q;
+
+  printf("tp=%f\ttq=%f\tdg=%f\tp=%f\tq=%f\n", tp, tq, dg, p, q);
+  printf("vit=[%f,%f,%f]\n", vit[0], vit[1], vit[2]);
+
   x1=tp*pos[0]+dg*pos[1]-2.*p*cis2*pos[2];
   y1=dg*pos[0]+tq*pos[1]+2.*q*cis2*pos[2];
   vx1=tp*vit[0]+dg*vit[1]-2.*p*cis2*vit[2];
   vy1=dg*vit[0]+tq*vit[1]+2.*q*cis2*vit[2];
+
+  printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\n",gg, vx1, vy1, x1, y1, GM, rayon);
+
   k=gg*vy1/GM-x1/rayon;
   h=-gg*vx1/GM-y1/rayon;
+  printf("%f\t%f\n",k,h);
   psi=1./(1.+sqrt(1.-k*k-h*h));
   ach=1.-psi*h*h;
   ack=1.-psi*k*k;
@@ -87,4 +99,16 @@ void cartoelt(long double pos[3], long double vit[3], long double GM, long doubl
   ell[3]=q;
   ell[4]=p;
   ell[5]=lambda;
+}
+
+int main(){
+  double pos[3]={1,2,3};
+  double vit[3]={3,1,2};
+  double GM=1;
+  double ell[6];
+  cartoelt(pos,vit,GM,ell);
+  for(int i=0;i<6;i++){
+    printf("%f\t", ell[i]);
+  }
+  return 0;
 }
