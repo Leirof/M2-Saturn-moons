@@ -33,13 +33,43 @@ def pos_evol(bodies, T, DT):
     plt.show()
 
 def orbits_3D(bodies):
-    fig = plt.figure(figsize=(5,5))
+    # fig = plt.figure(figsize=(5,5))
 
-    ax = plt.subplot(111, projection='3d')
-    ax.set_title('Orbits of the bodies')
+    # ax = plt.subplot(111, projection='3d')
+    # ax.set_title('Orbits of the bodies')
+    # for body in bodies:
+    #     ax.plot(body.pos_evol[:,0], body.pos_evol[:,1], body.pos_evol[:,2], marker='o', label=body.name, c=body.color)
+
+    plt.figure(figsize=(15,5))
+
+    # Orbit on plane x,y
+    plt.subplot(131)
+    plt.title('Orbit on plane x,y')
     for body in bodies:
-        ax.plot(body.pos_evol[:,0], body.pos_evol[:,1], body.pos_evol[:,2], marker='o', label=body.name, c=body.color)
-    
+        plt.plot(body.pos_evol[:,0], body.pos_evol[:,1], label=body.name, c=body.color) 
+    plt.xlabel('x [km]')
+    plt.ylabel('y [km]')
+    plt.legend()
+
+    # Orbit on plane x,z
+    plt.subplot(132)
+    plt.title('Orbit on plane x,z') 
+    for body in bodies:
+        plt.plot(body.pos_evol[:,0], body.pos_evol[:,2], label=body.name, c=body.color)
+    plt.xlabel('x [km]')
+    plt.ylabel('z [km]')    
+    plt.legend()
+
+    # Orbit on plane y,z
+    plt.subplot(133)
+
+    plt.title('Orbit on plane y,z')
+    for body in bodies:
+        plt.plot(body.pos_evol[:,1], body.pos_evol[:,2], label=body.name, c=body.color)
+    plt.xlabel('y [km]')
+    plt.ylabel('z [km]')
+    plt.legend()
+   
     plt.show()
 
 def vel_evol(bodies, T, DT):
