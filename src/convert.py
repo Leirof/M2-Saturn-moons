@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit
+from numba import njit # optional (on-the-fly compilation)
 
 # Hide compilation warnings
 from numba.core.errors import NumbaDeprecationWarning, NumbaPendingDeprecationWarning
@@ -7,22 +7,30 @@ import warnings
 warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
 warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)
 
-@njit
+@njit # optional (on-the-fly compilation)
 def orbital_to_cartesian(ell: list[float] | np.ndarray[float], GM: float) -> tuple[list[float], list[float]]:
+    # Remove these type hints if you are running python < 3.10
     """
     Converts orbital elements to cartesian coordinates
-    :param ell: orbital elements [a, e, i, Ω, ω, M]
+    :param ell: orbital elements [a, e, i, Ω, ω, λ]
     :param GM: gravitational parameter
     :return: cartesian coordinates and speeds ([x, y, z], [vx, vy, vz])
     """
 
+    # Parsing orbital elements to original function parameters
     a = ell[0]
-    k = ell[1]
-    h = ell[2]
-    q = ell[3]
-    p = ell[4]
+    e = ell[1]
+    i = ell[2]
+    omega = ell[3]
+    varpi = ell[4]
     l = ell[5]
 
+    k = e*np.cos(varpi)
+    h = e*np.sin(varpi)
+    q = np.sin(i/2)*np.cos(omega)
+    p = np.sin(i/2)*np.sin(omega)
+
+    # The original function converted to python (not my code, don't ask me how it works)
     n = np.sqrt(GM / a ** 3)
     fle = l-k*np.sin(l)+h*np.cos(l)
     corf = (l - fle + k * np.sin(fle) - h * np.cos(fle)) / (1 - k * np.cos(fle) - h * np.sin(fle))
@@ -66,7 +74,16 @@ def orbital_to_cartesian(ell: list[float] | np.ndarray[float], GM: float) -> tup
 
 
 def cartesian_to_orbital(pos: list[float] | np.ndarray[float], vit: list[float] | np.ndarray[float], GM: float) -> list[float] | np.ndarray[float]:
+    # Remove these type hints if you are running python < 3.10
+    """
+    Converts cartesian coordinates to orbital elements
+    :param pos: cartesian coordinates [x, y, z]
+    :param vit: cartesian speeds [vx, vy, vz]
+    :param GM: gravitational parameter
+    :return: orbital elements [a, e, i, Ω, ω, λ]
+    """
 
+    # The original function converted to python (not my code, don't ask me how it works)
     pos = np.array(pos)
     vit = np.array(vit)
 
@@ -87,20 +104,14 @@ def cartesian_to_orbital(pos: list[float] | np.ndarray[float], vit: list[float] 
     tq = 1 - 2 * q*q
     dg = 2 * p * q
 
-    # print("tp={}\ttq={}\tdg={}\tp={}\tq={}".format(tp, tq, dg, p, q))
-    # print("vit=",vit)
-
     x1 = tp * pos[0] + dg * pos[1] - 2 * p * cis2 * pos[2]
     y1 = dg * pos[0] + tq * pos[1] + 2 * q * cis2 * pos[2]
     vx1 = tp * vit[0] + dg * vit[1] - 2 * p * cis2 * vit[2]
     vy1 = dg * vit[0] + tq * vit[1] + 2 * q * cis2 * vit[2]
 
-    # print(gg, vx1, vy1, x1, y1, GM, rayon)
-
     k = gg * vy1 / GM - x1 / rayon
     h = -gg * vx1 / GM - y1 / rayon
 
-    # print(k,h)
     psi = 1/(1+np.sqrt(1-k*k-h*h))
 
     ach = 1 - psi * h*h
@@ -118,12 +129,16 @@ def cartesian_to_orbital(pos: list[float] | np.ndarray[float], vit: list[float] 
 
     l = fle - k * sf + h * cf
 
-    return np.array([a, k, h, q, p, l])
+    # Parsing the original function outputs to the orbital elements
+    e = np.sqrt(k*k - h*h)
+    i = 2 * np.arcsin(np.sqrt(p**2 + q**2))
+    omega = np.arctan2(p, q)
+    varpi = np.arctan2(k, h)
+
+    return np.array([a, e, i, omega, varpi, l])
 
 if __name__ == "__main__":
-    # vit, pos = orbital_to_cartesian([1, 0, 0, 0, 1, 0], 1)
-    pos = [1, 2, 3]
-    vit = [3, 1, 2]
+    vit, pos = orbital_to_cartesian([1, 0, 0, 0, 1, 0], 1)
     GM = 1
     ell = cartesian_to_orbital(pos,vit, GM)
     for i in ell:
